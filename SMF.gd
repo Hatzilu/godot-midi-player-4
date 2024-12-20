@@ -1,5 +1,5 @@
 """
-	Standard MIDI File reader/writer by Yui Kinomoto @arlez80
+	Standard MIDI FileAccess reader/writer by Yui Kinomoto @arlez80
 """
 
 class_name SMF
@@ -262,7 +262,7 @@ func read_file( path:String ) -> SMFParseResult:
 	#
 
 	var result: = SMFParseResult.new( )
-	var f: = File.new( )
+	var f: = FileAccess.new( )
 
 	var err:int = f.open( path, f.READ )
 	if err != OK:
