@@ -262,11 +262,10 @@ func read_file( path:String ) -> SMFParseResult:
 	#
 
 	var result: = SMFParseResult.new( )
-	var f: = FileAccess.new( )
 
-	var err:int = f.open( path, f.READ )
-	if err != OK:
-		result.error = err
+	var f = FileAccess.open( path, FileAccess.READ )
+	if f.get_error():
+		result.error = f.get_error()
 		return result
 	var stream:StreamPeerBuffer = StreamPeerBuffer.new( )
 	stream.set_data_array( f.get_buffer( f.get_len( ) ) )

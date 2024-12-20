@@ -1,4 +1,3 @@
-tool
 extends EditorImportPlugin
 
 enum Presets { PRESET_DEFAULT }

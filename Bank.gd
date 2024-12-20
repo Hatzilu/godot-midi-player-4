@@ -4,15 +4,13 @@
 	MIT License
 """
 #extends Resource
-
-const drum_track_bank:int = 128
-
-class_name Bank
+class Bank:
+	var drum_track_bank:int = 128
 
 # 音色
 class Instrument:
-	var array_base_pitch:Array	# これは本当はPoolRealArrayなんだけど、参照型ではなく値型らしく、代入だけでメモリ使用量が爆発してしまう
-	var array_stream:Array		# AudioStreamSample[]
+	var array_base_pitch:Array	# これは本当はPackedFloat32Arrayなんだけど、参照型ではなく値型らしく、代入だけでメモリ使用量が爆発してしまう
+	var array_stream:Array		# AudioStream[]
 	var ads_state:Array			# VolumeState[]
 	var release_state:Array		# VolumeState[]
 	var volume_db:float = 0.0
@@ -136,7 +134,7 @@ class TempSoundFontInstrumentBagADSR:
 		return new
 
 # 音色テーブル
-export(Dictionary) var presets:Dictionary = Dictionary( )
+@export var presets:Dictionary = Dictionary( )
 # 頭の無音
 const head_silent_samples:int = 44100 / 8
 const head_silent_second:float = 1.0 / 8.0
@@ -155,7 +153,7 @@ func set_preset_sample( program_number:int, base_sample:int, base_key:int ) -> v
 	preset.number = program_number
 	for i in range( 0, 128 ):
 		var inst:Instrument = Instrument.new( )
-		inst.array_base_pitch = PoolRealArray( [ float( i - base_key ) / 12.0 ] )
+		inst.array_base_pitch = PackedFloat32Array( [ float( i - base_key ) / 12.0 ] )
 		inst.array_stream = [ base_sample ]
 		inst.preset = preset
 		preset.instruments[i] = inst
@@ -190,7 +188,7 @@ func get_preset( program_number:int, bank:int = 0 ) -> Preset:
 			pc = program_number
 		# それでも存在しない場合
 		if not self.presets.has( pc ):
-			if self.presets.empty( ): push_error( "Bank is empty." )
+			if self.presets.is_empty( ): push_error( "Bank is empty." )
 			# 一番最初のデフォルト音源を読む
 			pc = self.presets.keys( )[0]
 
@@ -376,7 +374,7 @@ func _read_soundfont_preset_compose_sample( sf:SoundFont.SoundFontData, preset:P
 			if ibag.vel_range.high < 100: continue
 			var sample:SoundFont.SoundFontSampleHeader = ibag.sample
 			var array_stream:Array = Array( )
-			var array_base_pitch:PoolRealArray = PoolRealArray( )
+			var array_base_pitch:PackedFloat32Array = PackedFloat32Array( )
 
 			for i in range( 0, 2 ):
 				var start:int = sample.start + ibag.sample_start_offset
@@ -393,15 +391,15 @@ func _read_soundfont_preset_compose_sample( sf:SoundFont.SoundFontData, preset:P
 				if loaded_key in loaded_sample_data:
 					array_stream.append( loaded_sample_data[loaded_key] )
 				else:
-					var ass:AudioStreamSample = AudioStreamSample.new( )
+					var ass:AudioStream = AudioStream.new( )
 
-					ass.data = append_head_silent + sample_base.subarray( start * 2, end * 2 - 1 )
-					ass.format = AudioStreamSample.FORMAT_16_BITS
+					ass.data = append_head_silent + sample_base.slice( start * 2, end * 2 - 1 )
+					ass.format = AudioStream.FORMAT_16_BITS
 					ass.mix_rate = 44100
 					ass.stereo = false
-					ass.loop_mode = AudioStreamSample.LOOP_DISABLED
+					ass.loop_mode = AudioStream.LOOP_DISABLED
 					if ( ibag.sample_modes == SoundFont.sample_mode_loop_continuously ) or ( start + 64 <= start_loop and ibag.sample_modes == -1 and preset.number != drum_track_bank << 7 ):
-						ass.loop_mode = AudioStreamSample.LOOP_FORWARD
+						ass.loop_mode = AudioStream.LOOP_FORWARD
 						ass.loop_begin = start_loop - start + append_head_silent_samples
 						ass.loop_end = end_loop - start + append_head_silent_samples
 
